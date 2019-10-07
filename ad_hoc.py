@@ -5,6 +5,29 @@ from ansible.vars.manager import VariableManager
 from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.playbook.play import Play
 from ansible.module_utils.common.collections import ImmutableDict
+from ansible.plugins.callback import CallbackBase
+
+
+class MyCallBack(CallbackBase):
+    """
+    重写callbackBase类的部分方法
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(MyCallBack, self).__init__(*args, **kwargs)  # 初始化父类方法
+        self.host_ok = {}
+        self.host_unreachable = {}
+        self.host_failed = {}
+
+    def v2_runner_on_unreachable(self, result):  # result 为父类中获取所有执行结果信息的对象
+        self.host_unreachable[result._host.get_name()] = result
+
+    def v2_runner_on_ok(self, result):
+        self.host_ok[result._host.get_name()] = result
+
+    def v2_runner_on_failed(self, result, ignore_errors=False):
+        self.host_failed[result._host.get_name()] = result
+
 
 load = DataLoader()
 inventory = InventoryManager(loader=load, sources="hosts")
@@ -31,8 +54,19 @@ play_source = dict(
     ]
 )
 play = Play().load(play_source, variable_manager=variable_manager, loader=load)
+callback = MyCallBack()
 # passwords没有实际作用，实际中密码已经写在文件中了
 tqm = TaskQueueManager(inventory=inventory, variable_manager=variable_manager,
-                       loader=load, passwords={})
+                       loader=load, passwords={}, stdout_callback=callback)
 result = tqm.run(play)
-print(result)
+
+result_raw = {'success': {}, 'failed': {}, 'unreachable': {}}
+
+for host, result in callback.host_ok.items():
+    result_raw['success'][host] = result._result  # _result属性来获取任务执行的结果
+for host, result in callback.host_failed.items():
+    result_raw['failed'][host] = result._result
+for host, result in callback.host_unreachable.items():
+    result_raw['unreachable'][host] = result._result
+
+print(result_raw)
