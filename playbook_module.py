@@ -50,13 +50,13 @@ inventory = InventoryManager(loader=loader, sources="/etc/ansible/hosts")
 variable_manager = VariableManager(loader=loader, inventory=inventory)
 context.CLIARGS = ImmutableDict(listtags=False, listtasks=False,
                                 listhosts=False, syntax=False,
-                                connection="smart", module_path=None,
+                                connection="ssh", module_path=None,
                                 forks=5, private_key_file=None,
                                 ssh_common_args=None, ssh_extra_args=None,
                                 sftp_extra_args=None, scp_extra_args=None,
                                 become=False, become_method=None,
                                 become_user=None, start_at_task=None,
-                                verbosity=None, check=False)
+                                verbosity=0, check=False)
 # PlaybookExecutor执行playbook
 playbook = PlaybookExecutor(loader=loader, inventory=inventory,
                             passwords={}, variable_manager=variable_manager,
