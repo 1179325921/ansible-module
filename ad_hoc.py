@@ -32,7 +32,7 @@ class MyCallBack(CallbackBase):
 load = DataLoader()
 inventory = InventoryManager(loader=load, sources="hosts")
 variable_manager = VariableManager(loader=load, inventory=inventory)
-# 执行参数选项
+# 执行参数选项 verbosity=0默认是0，应该不填也没关系，但实际缺少这个参数就会报错。
 context.CLIARGS = ImmutableDict(listtags=False, listtasks=False,
                                 listhosts=False, syntax=False,
                                 connection="ssh", module_path=None,
@@ -40,8 +40,7 @@ context.CLIARGS = ImmutableDict(listtags=False, listtasks=False,
                                 ssh_common_args=None, ssh_extra_args=None,
                                 sftp_extra_args=None, scp_extra_args=None,
                                 become=False, become_method=None,
-                                become_user=None,
-                                verbosity=0, check=False)
+                                become_user=None, verbosity=0, check=False)
 # Play 执行对象和模块
 play_source = dict(
     name='Ansible Play ad-hoc test',  # 任务执行的名称
@@ -58,8 +57,7 @@ callback = MyCallBack()
 # passwords没有实际作用，实际中密码已经写在文件中了
 tqm = TaskQueueManager(inventory=inventory, variable_manager=variable_manager,
                        loader=load, passwords={}, stdout_callback=callback)
-result = tqm.run(play)
-print(result)
+tqm.run(play)
 
 result_raw = {'success': {}, 'failed': {}, 'unreachable': {}}
 
